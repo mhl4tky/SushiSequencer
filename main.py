@@ -1,8 +1,11 @@
 import numpy as np
 import cv2
 import os
+import OSC
 
 video_file = "/Users/bram.dejong/Documents/sushi seq scout 0729.avi"
+
+osc_connection = ('192.168.0.6', 7000)
 
 circle_min_r = 55
 circle_max_r = 65
@@ -78,10 +81,6 @@ color_lookup = {
     "blue": (0xCD, 0x5A, 0x6A)
 }
 
-cap = cv2.VideoCapture(video_file)
-
-total_frames = cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) - 5
-
 
 def offset_xy(point, x, y):
     return point[0] + x, point[1] + y
@@ -91,11 +90,28 @@ previous_y_values = []
 look_back = 10
 index = 0
 
+
 def find_circles(framed, variables):
     to_process = cv2.cvtColor(framed, cv2.COLOR_BGR2GRAY)
     to_process = cv2.medianBlur(to_process, variables.blur * 2 + 1)
     return cv2.HoughCircles(to_process, cv2.cv.CV_HOUGH_GRADIENT, variables.dp, variables.min_dist,
-                               minRadius=circle_min_r, maxRadius=circle_max_r)
+                            minRadius=circle_min_r, maxRadius=circle_max_r)
+
+
+osc = OSC.OSCClient()
+osc.connect(osc_connection)
+
+do_send = True
+
+def send_color(color):
+    oscmsg = OSC.OSCMessage()
+    oscmsg.setAddress("/plate")
+    oscmsg.append(color)
+    if do_send:
+        osc.send(oscmsg)
+
+
+cap = cv2.VideoCapture(video_file)
 
 while cap.isOpened():
     index += 1
@@ -137,13 +153,13 @@ while cap.isOpened():
             if is_new_circle:
                 center_x = x_value + frame_tl[0]
                 center_y = y_value + frame_tl[1]
-                size = int(variables.outer_circle_size*1.2)
+                size = int(variables.outer_circle_size * 1.2)
 
                 circle_tl = (center_x - size, center_y - size)
                 circle_br = (center_x + size, center_y + size)
                 cut_around_circle = original[circle_tl[1]:circle_br[1], circle_tl[0]:circle_br[0]].copy()
 
-                mask = np.zeros((size*2, size*2), np.uint8)
+                mask = np.zeros((size * 2, size * 2), np.uint8)
                 cv2.circle(mask, (size, size), variables.outer_circle_size, (255, 255, 255), -1)
                 cv2.circle(mask, (size, size), variables.inner_circle_size, (0, 0, 0), -1)
 
@@ -162,9 +178,11 @@ while cap.isOpened():
                         min_index = col_index
                         min_diff = diff
 
+                send_color(min_index)
+
                 masked_image = cv2.bitwise_and(cut_around_circle, cut_around_circle, mask=mask)
-                cv2.putText(masked_image, plate_names[min_index], (size-variables.inner_circle_size+10, size), cv2.cv.CV_FONT_HERSHEY_SIMPLEX,
-                            0.5, (255, 255, 255))
+                cv2.putText(masked_image, plate_names[min_index], (size - variables.inner_circle_size + 10, size),
+                            cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
                 cv2.imshow(masked_frame_name, masked_image)
 
                 if True:
@@ -183,20 +201,13 @@ while cap.isOpened():
 
             cv2.circle(framed, (x_value, y_value), variables.outer_circle_size, color_lookup["blue"], 2)
             cv2.circle(framed, (x_value, y_value), variables.inner_circle_size, color_lookup["blue"], 2)
-            cv2.line(framed, (x_value+2, y_value), (x_value-2, y_value), color_lookup["blue"], 2)
-            cv2.line(framed, (x_value, y_value+2), (x_value, y_value-2), color_lookup["blue"], 2)
+            cv2.line(framed, (x_value + 2, y_value), (x_value - 2, y_value), color_lookup["blue"], 2)
+            cv2.line(framed, (x_value, y_value + 2), (x_value, y_value - 2), color_lookup["blue"], 2)
 
     cv2.imshow(draw_frame_name, framed)
-
-    current_pos = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
-
-    # if current_pos >= total_frames:
-    #    cap.set(cv2.cv.CV_CAP_PROP_POS_MSEC, 0)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-if cap:
-    cap.release()
-
+cap.release()
 cv2.destroyAllWindows()
