@@ -1,7 +1,8 @@
 import numpy as np
 import cv2
+import os
 
-video_file = "/Users/bram.dejong/Documents/sushi seq scout 0729 short seq.avi"
+video_file = "/Users/bram.dejong/Documents/sushi seq scout 0729.avi"
 
 circle_min_r = 55
 circle_max_r = 65
@@ -19,14 +20,17 @@ cv2.namedWindow(draw_frame_name, cv2.WINDOW_NORMAL)
 mask_width = bounding_bottom_right[0] - bounding_top_left[0]
 mask_height = bounding_bottom_right[1] - bounding_top_left[1]
 
+plate_names = ["RED", "YELLOW", "BLUE", "PURPLE"]
+plate_colors = [5, 27, 90, 118]
+
 
 class Variables:
     def __init__(self):
         self.min_dist = 4000
-        self.dp = 1.7
+        self.dp = 1.8
         self.blur = 0
         self.outer_circle_size = 64
-        self.inner_circle_size = 50
+        self.inner_circle_size = 45
         self.X = 0
         self.Y = -200
 
@@ -83,79 +87,111 @@ def offset_xy(point, x, y):
     return point[0] + x, point[1] + y
 
 
-previous_y_value = -20000
+previous_y_values = []
+look_back = 10
+index = 0
+
+def find_circles(framed, variables):
+    to_process = cv2.cvtColor(framed, cv2.COLOR_BGR2GRAY)
+    to_process = cv2.medianBlur(to_process, variables.blur * 2 + 1)
+    return cv2.HoughCircles(to_process, cv2.cv.CV_HOUGH_GRADIENT, variables.dp, variables.min_dist,
+                               minRadius=circle_min_r, maxRadius=circle_max_r)
 
 while cap.isOpened():
+    index += 1
 
     ret, frame = cap.read()
 
-    br = offset_xy(bounding_bottom_right, variables.X, variables.Y)
-    tl = offset_xy(bounding_top_left, variables.X, variables.Y)
+    if frame is None:
+        break
 
-    to_process = frame.copy()[tl[1]:br[1], tl[0]:br[0]]
-    to_draw = to_process.copy()
+    original = frame.copy()
 
-    # original
-    cv2.circle(frame, (variables.X, variables.Y), variables.outer_circle_size, color_lookup["red"], 2)
-    cv2.rectangle(frame, br, tl, color_lookup["green"], 2)
+    frame_br = offset_xy(bounding_bottom_right, variables.X, variables.Y)
+    frame_tl = offset_xy(bounding_top_left, variables.X, variables.Y)
+
+    # take the frame out of the original image
+    framed = frame[frame_tl[1]:frame_br[1], frame_tl[0]:frame_br[0]].copy()
+
+    cv2.rectangle(frame, frame_br, frame_tl, color_lookup["green"], 3)
     cv2.imshow(original_frame_name, frame)
 
-    to_process = cv2.cvtColor(to_process, cv2.COLOR_BGR2GRAY)
-    to_process = cv2.medianBlur(to_process, variables.blur * 2 + 1)
-
-    circles = cv2.HoughCircles(to_process, cv2.cv.CV_HOUGH_GRADIENT, variables.dp, variables.min_dist,
-                               minRadius=circle_min_r, maxRadius=circle_max_r)
+    # now process this frame to extract the circles
+    circles = find_circles(framed, variables)
 
     if circles is not None:
         a, b, c = circles.shape
         circles = np.uint16(np.around(circles))
-        for i in range(b):
-            y_value = circles[0][i][1]
+        if b:
+            circle = circles[0][0]
+            x_value = circle[0]
+            y_value = circle[1]
 
-            if y_value + 20 < previous_y_value:
-                mask = np.zeros((mask_height, mask_width), np.uint8)
-                cv2.circle(mask, (circles[0][i][0], circles[0][i][1]), variables.outer_circle_size, (255, 255, 255), -1)
-                cv2.circle(mask, (circles[0][i][0], circles[0][i][1]), variables.inner_circle_size, (0, 0, 0), -1)
+            is_new_circle = True
 
-                masked_image = cv2.bitwise_and(to_draw, to_draw, mask=mask)
+            for look_back_value in previous_y_values:
+                if look_back_value < y_value:
+                    is_new_circle = False
+                    break
 
-                hsv_image = cv2.cvtColor(to_draw, cv2.COLOR_BGR2HSV)
+            if is_new_circle:
+                center_x = x_value + frame_tl[0]
+                center_y = y_value + frame_tl[1]
+                size = int(variables.outer_circle_size*1.2)
 
-                h_hist = cv2.calcHist([hsv_image], [0], mask, [256], [0, 255])
+                circle_tl = (center_x - size, center_y - size)
+                circle_br = (center_x + size, center_y + size)
+                cut_around_circle = original[circle_tl[1]:circle_br[1], circle_tl[0]:circle_br[0]].copy()
 
-                hsv_max = np.uint8([[[h_hist.argmax(), 255, 255]]])
-                bgr = map(int, tuple(cv2.cvtColor(hsv_max, cv2.COLOR_HSV2BGR)[0][0]))
-                print bgr, type(bgr[0])
+                mask = np.zeros((size*2, size*2), np.uint8)
+                cv2.circle(mask, (size, size), variables.outer_circle_size, (255, 255, 255), -1)
+                cv2.circle(mask, (size, size), variables.inner_circle_size, (0, 0, 0), -1)
 
-                cv2.rectangle(masked_image, (0, 0), (20, 20), bgr, -1)
+                # find the max HSV value
+                hsv_image = cv2.cvtColor(cut_around_circle, cv2.COLOR_BGR2HSV)
+                h_argmax = cv2.calcHist([hsv_image], [0], mask, [256], [0, 255]).argmax()
 
+                min_diff = 20000
+                min_index = -1
+
+                for col_index, color in enumerate(plate_colors):
+                    diff_1 = abs(color - h_argmax)
+                    diff_2 = abs(color + 180 - h_argmax)
+                    diff = min(diff_1, diff_2)
+                    if diff < min_diff:
+                        min_index = col_index
+                        min_diff = diff
+
+                masked_image = cv2.bitwise_and(cut_around_circle, cut_around_circle, mask=mask)
+                cv2.putText(masked_image, plate_names[min_index], (size-variables.inner_circle_size+10, size), cv2.cv.CV_FONT_HERSHEY_SIMPLEX,
+                            0.5, (255, 255, 255))
                 cv2.imshow(masked_frame_name, masked_image)
 
-                h = np.zeros((300, 256, 3))
-                bins = np.arange(256).reshape(256, 1)
-                hist_item = cv2.calcHist([masked_image], [0], mask, [256], [0, 255])
-                cv2.normalize(hist_item, hist_item, 0, 255, cv2.NORM_MINMAX)
-                hist = np.int32(np.around(hist_item))
-                pts = np.column_stack((bins, hist))
-                cv2.polylines(h, [pts], False, (255, 255, 255))
-                h = np.flipud(h)
-                cv2.imshow('colorhist', h)
+                if True:
+                    try:
+                        os.mkdir(plate_names[min_index])
+                    except:
+                        pass
 
-            previous_y_value = y_value
+                    filename = os.path.join(plate_names[min_index], str(index) + ".png")
 
-            cv2.circle(to_draw, (circles[0][i][0], circles[0][i][1]), variables.outer_circle_size,
-                       color_lookup["red"], 2)
-            cv2.circle(to_draw, (circles[0][i][0], circles[0][i][1]), variables.inner_circle_size, color_lookup["red"],
-                       2)
+                    cv2.imwrite(filename, masked_image)
 
-            cv2.circle(to_draw, (circles[0][i][0], circles[0][i][1]), 2, color_lookup["red"], 2)
+            previous_y_values.append(y_value)
+            if len(previous_y_values) >= look_back:
+                previous_y_values = previous_y_values[1:]
 
-    cv2.imshow(draw_frame_name, to_draw)
+            cv2.circle(framed, (x_value, y_value), variables.outer_circle_size, color_lookup["blue"], 2)
+            cv2.circle(framed, (x_value, y_value), variables.inner_circle_size, color_lookup["blue"], 2)
+            cv2.line(framed, (x_value+2, y_value), (x_value-2, y_value), color_lookup["blue"], 2)
+            cv2.line(framed, (x_value, y_value+2), (x_value, y_value-2), color_lookup["blue"], 2)
+
+    cv2.imshow(draw_frame_name, framed)
 
     current_pos = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
 
-    if current_pos >= total_frames:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_MSEC, 0)
+    # if current_pos >= total_frames:
+    #    cap.set(cv2.cv.CV_CAP_PROP_POS_MSEC, 0)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
