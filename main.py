@@ -3,7 +3,7 @@ import cv2
 import os
 import OSC
 
-video_file = "/Users/bram.dejong/Documents/sushi seq scout 0729.avi"
+video_file = "sushi.avi"
 
 osc_connection = ('192.168.0.6', 7000)
 
@@ -98,8 +98,8 @@ def find_circles(framed, variables):
                             minRadius=circle_min_r, maxRadius=circle_max_r)
 
 
-#osc = OSC.OSCClient()
-#osc.connect(osc_connection)
+osc = OSC.OSCClient()
+osc.connect(osc_connection)
 
 do_send = False
 
@@ -221,7 +221,8 @@ while cap.isOpened():
             cv2.line(framed, (x_value + 2, y_value), (x_value - 2, y_value), color_lookup["blue"], 2)
             cv2.line(framed, (x_value, y_value + 2), (x_value, y_value - 2), color_lookup["blue"], 2)
 
-    cv2.imshow(draw_frame_name, framed)
+
+    cv2.imshow(draw_frame_name, original)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

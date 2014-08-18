@@ -55,3 +55,6 @@ docs/_build/
 target/
 
 .idea
+
+.avi
+.mp4
