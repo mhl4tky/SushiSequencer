@@ -111,17 +111,17 @@ def send_color(color):
         osc.send(oscmsg)
 
 
-def draw_hsv_channels(hsv_image, mask):
-    width, height, bits = hsv_image.shape
-    h, s, v = cv2.split(hsv_image)
+def draw_hls_channels(hls_image, mask):
+    width, height, bits = hls_image.shape
+    h, l, s = cv2.split(hls_image)
 
     background = np.zeros((height, width*2), np.uint8)
 
-    background[0:height, 0:width] = cv2.bitwise_and(s, s, mask=mask)
-    background[0:height, width:width*2] = cv2.bitwise_and(v, v, mask=mask)
+    background[0:height, 0:width] = cv2.bitwise_and(l, l, mask=mask)
+    background[0:height, width:width*2] = cv2.bitwise_and(s, s, mask=mask)
 
-    cv2.putText(background, "S", (width/2, height/2), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
-    cv2.putText(background, "V", (width/2 + width, height/2), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
+    cv2.putText(background, "L", (width/2, height/2), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
+    cv2.putText(background, "S", (width/2 + width, height/2), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255))
 
     cv2.imshow("split", background)
 
@@ -178,11 +178,11 @@ while cap.isOpened():
                 cv2.circle(mask, (size, size), variables.inner_circle_size, (0, 0, 0), -1)
 
                 # find the max HSV value
-                hsv_image = cv2.cvtColor(cut_around_circle, cv2.COLOR_BGR2HSV)
+                hls_image = cv2.cvtColor(cut_around_circle, cv2.COLOR_BGR2HLS)
 
-                draw_hsv_channels(hsv_image, mask)
+                draw_hls_channels(hls_image, mask)
 
-                h_argmax = cv2.calcHist([hsv_image], [0], mask, [256], [0, 255]).argmax()
+                h_argmax = cv2.calcHist([hls_image], [0], mask, [256], [0, 255]).argmax()
 
                 min_diff = 20000
                 min_index = -1
