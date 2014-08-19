@@ -18,19 +18,22 @@ namespace OpenCV_Test
         private static CvMat _circles;
         private static readonly int[] PlateColors = { 5, 27, 90, 118 };
         private static readonly string[] PlateNames = { "Red", "Yellow", "Blue", "Purple" };
-        private static readonly CvFont TextFont = new CvFont(FontFace.HersheyPlain, 1f, 1f);
-        private static readonly IplImage Masked = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
-        private static readonly IplImage Mask = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
-        private static readonly IplImage Hsv = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
-        private static readonly FixedSizedList<double> PreviousYValues = new FixedSizedList<double> { Limit = 10 };
+        private static CvFont _textFont = new CvFont(FontFace.HersheyPlain, 1f, 1f);
+        private static IplImage _masked = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
+        private static IplImage _mask = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
+        private static IplImage _hsv = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
+        private static IplImage _detector = new IplImage(new CvSize(200, 200), BitDepth.U8, 3);
+        private static FixedSizedList<double> _previousYValues = new FixedSizedList<double> { Limit = 10 };
 
         public Form1()
         {
             InitializeComponent();
 
             _window = new CvWindow("OpenCV1");
-            Cv.Set(Masked, CvColor.Black);
-            Cv.Set(Mask, CvColor.Black);
+            Cv.Set(_masked, CvColor.Black);
+            Cv.Set(_mask, CvColor.Black);
+            Cv.Circle(_mask, 100, 100, MaxRadius, CvColor.White, -1);
+            Cv.Circle(_mask, 100, 100, MinRadius, CvColor.Black, -1);
              
 
             var openCv = new Thread(OpenCv);
@@ -45,49 +48,51 @@ namespace OpenCV_Test
         {
             var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\sushi.avi");
 
-            while (CvWindow.WaitKey(16) < 0)
+            while (CvWindow.WaitKey(1) < 0)
             {
                 var src = cap.QueryFrame();
 
-                if(src == null) break;
+                if (src == null) break;
 
                 //cut out a small piece from the original, let the circle detection run
-                src.GetSubImage(_clipping).GetCircles(_blur, _dp, MinRadius, MaxRadius, out _circles); 
+                src.GetSubImage(_clipping).GetCircles(_blur, _dp, MinRadius, MaxRadius, out _circles, out _detector); 
 
                 if (_circles.Any())
                 {
                     //check if all previous center y coordinates where larger than the new one
-                    if (PreviousYValues.All(val => val > _circles[0].Val1)) 
+                    if (_previousYValues.All(val => val > _circles[0].Val1)) 
                     {
                         //get the image from the original so that the circle is centered
                         var aroundDetectedCircle = src.GetSubImage(_circles.GetClippingRect(_clipping));
 
                         //mask the image
-                        Cv.And(aroundDetectedCircle, Mask, Masked);
+                        Cv.And(aroundDetectedCircle, _mask, _masked);
 
                         //convert to HSV
-                        Cv.CvtColor(Masked, Hsv, ColorConversion.BgrToHsv); 
+                        Cv.CvtColor(_masked, _hsv, ColorConversion.BgrToHsv); 
 
                         //get the closest match from the histogram peak index
-                        var color = PlateColors.GetClosestColor((Hsv.Histogram(Mask)).IndexOfMaxValue());
+                        var color = PlateColors.GetClosestColor((_hsv.Histogram(_mask)).IndexOfMaxValue());
 
-                        Masked.PutText(PlateNames[color], new CvPoint(10, 184), TextFont, CvColor.White);
-                        
-                        src.DrawImage(src.Width - 200, src.Height - 200, 200, 200, Masked);
+                        _masked.PutText(PlateNames[color], new CvPoint(10, 184), _textFont, CvColor.White);
                     }
 
-                    PreviousYValues.Add(_circles[0].Val1);
+                    _previousYValues.Add(_circles[0].Val1);
 
                     src.DrawCircle((int)_circles[0].Val0 + _clipping.X, (int)_circles[0].Val1 + _clipping.Y, MinRadius, CvColor.Green, 2);
                     src.DrawCircle((int)_circles[0].Val0 + _clipping.X, (int)_circles[0].Val1 + _clipping.Y, MaxRadius, CvColor.Green, 2);
+
+                    _detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MinRadius, CvColor.Red, 2);
+                    _detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MaxRadius, CvColor.Red, 2);
                 }
                 else
-                    PreviousYValues.Add(int.MaxValue);
+                    _previousYValues.Add(int.MaxValue);
 
                 src.DrawRect(_clipping, CvColor.Red, 2);
-                src.PutText("dp: " + _dp, new CvPoint(10, 16), TextFont, CvColor.White);
-                src.PutText("blur: " + _blur, new CvPoint(10, 36), TextFont, CvColor.White);
-                src.DrawImage(src.Width - 200, src.Height - 200, 200, 200, Masked);
+                src.PutText("dp: " + _dp, new CvPoint(10, 16), _textFont, CvColor.White);
+                src.PutText("blur: " + _blur, new CvPoint(10, 36), _textFont, CvColor.White);
+                src.DrawImage(src.Width - _detector.Width, src.Height - _detector.Height - 200, _detector.Width, _detector.Height, _detector);
+                src.DrawImage(src.Width - 200, src.Height - 200, 200, 200, _masked);
                 
                 _window.Image = src;
             }
@@ -118,13 +123,15 @@ namespace OpenCV_Test
             return new CvRect((int) circles[0].Val0 - 100 + clipping.X, (int) circles[0].Val1 - 100 + clipping.Y, 200, 200);
         }
 
-        public static void GetCircles(this IplImage image, int blur, double dp, int minRadius, int maxRadius, out CvMat circles)
+        public static void GetCircles(this IplImage image, int blur, double dp, int minRadius, int maxRadius, out CvMat circles, out IplImage detector)
         {
             circles = Cv.CreateMat(200, 1, MatrixType.F32C3);
             var gray = new IplImage(image.Size, BitDepth.U8, 1);
             image.CvtColor(gray, ColorConversion.BgrToGray);
             Cv.Smooth(gray, gray, SmoothType.Median, blur);
             Cv.HoughCircles(gray, circles, HoughCirclesMethod.Gradient, dp, int.MaxValue, 100, 100, minRadius, maxRadius);
+            detector = new IplImage(image.Size, BitDepth.U8, 3);
+            gray.CvtColor(detector, ColorConversion.GrayToBgr);
         }
 
         public static int IndexOfMaxValue(this int[] array)
