@@ -40,7 +40,7 @@
             this.trackBar1.Name = "trackBar1";
             this.trackBar1.Size = new System.Drawing.Size(259, 45);
             this.trackBar1.TabIndex = 0;
-            this.trackBar1.Value = 1;
+            this.trackBar1.Value = 4;
             // 
             // trackBar2
             // 

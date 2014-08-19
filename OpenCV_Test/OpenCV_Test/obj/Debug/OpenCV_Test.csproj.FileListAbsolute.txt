@@ -109,11 +109,6 @@ C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\dll\x86\opencv_videostab249.dll
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCV_Test.exe
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCV_Test.pdb
-C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.Blob.dll
-C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.CPlusPlus.dll
-C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.dll
-C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.Extensions.dll
-C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.UserInterface.dll
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.xml
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.Blob.xml
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\OpenCV_Test\OpenCV_Test\bin\Debug\OpenCvSharp.CPlusPlus.xml
