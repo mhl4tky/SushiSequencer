@@ -92,8 +92,8 @@ index = 0
 
 
 def find_circles(framed, variables):
+    to_process = cv2.medianBlur(framed, variables.blur * 2 + 1)
     to_process = cv2.cvtColor(framed, cv2.COLOR_BGR2GRAY)
-    to_process = cv2.medianBlur(to_process, variables.blur * 2 + 1)
     return cv2.HoughCircles(to_process, cv2.cv.CV_HOUGH_GRADIENT, variables.dp, variables.min_dist,
                             minRadius=circle_min_r, maxRadius=circle_max_r)
 
