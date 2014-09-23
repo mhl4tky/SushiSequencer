@@ -30,8 +30,8 @@ namespace RbmaSushiPlateDetector
             Shown += (sender, args) =>
             {
                 _window = new CvWindow("OpenCV AVT Mako");
-                //Cam();
-                Test();
+                Cam();
+                //Test();
             };
         }
 
