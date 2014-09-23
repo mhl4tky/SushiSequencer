@@ -1,0 +1,169 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using OpenCvSharp;
+
+namespace RbmaSushiPlateDetector
+{
+    public static class Helpers
+    {
+        public static void CvtColorHueToBgr(this IplImage src, IplImage dest, IplImage mask)
+        {
+            for (var i = 0; i < src.Width; i++)
+                for (var j = 0; j < src.Height; j++)
+                    if (mask[i, j][0] != 0)
+                        dest[i, j] = ConvertHsvToRgb(src[i, j][0]*2, 1, 1);
+        }
+
+        public static void CvtColorSaturationToBgr(this IplImage src, IplImage dest, IplImage mask)
+        {
+            for (var i = 0; i < src.Width; i++)
+                for (var j = 0; j < src.Height; j++)
+                    if (mask[i, j][0] != 0)
+                        dest[i, j] = ConvertHsvToRgb(0, src[i, j][1], 1);
+
+            var mono = new IplImage(dest.Size, BitDepth.U8, 1);
+            Cv.CvtColor(dest, mono, ColorConversion.BgrToGray);
+            Cv.CvtColor(mono, dest, ColorConversion.GrayToBgr);
+        }
+
+        public static int[] Histogram(this IplImage image, int channel, int size, IplImage mask)
+        {
+            var hist = new int[size];
+
+            for (var i = 0; i < image.Height; i++)
+                for (var j = 0; j < image.Width; j++)
+                    if (mask[i, j][0] != 0)
+                    {
+                        var index = (int) Math.Round(image[i, j][channel]);
+                        //if (index > size - 1) index = size - 1;
+                        hist[index]++;
+                    }
+
+            return hist;
+        }
+
+        public static void SetHistrogramData(this IplImage image, int[] data)
+        {
+            image.Set(CvColor.Black);
+            var max = (float) data.Max();
+
+            for (var i = 0; i < data.Length; i++)
+            {
+                image.DrawLine(i, image.Height, i, (int) (image.Height - (data[i]/max)*image.Height),
+                    ConvertHsvToRgb(i*2d, 1, 1), 1);
+            }
+        }
+
+        public static void SetHistrogramData(this IplImage image, int[] data, CvColor color)
+        {
+            image.Set(CvColor.Black);
+            var max = (float) data.Max();
+
+            for (var i = 0; i < data.Length; i++)
+            {
+                image.DrawLine(i + 2, image.Height, i + 2, (int) (image.Height - (data[i]/max)*image.Height),
+                    color, 1);
+            }
+        }
+
+        public static void SetHistrogramData(this IplImage image, int[] data, CvColor color, float max)
+        {
+            image.Set(CvColor.Black);
+
+            for (var i = 0; i < data.Length; i++)
+            {
+                image.DrawLine(i + 2, image.Height, i + 2, (int) (image.Height - (data[i]/max)*image.Height),
+                    color, 1);
+            }
+        }
+
+        public static CvRect GetClippingRect(this CvMat circles, CvRect clipping)
+        {
+            return new CvRect((int) circles[0].Val0 - clipping.Height/2 + clipping.X, (int) circles[0].Val1 - clipping.Width/2 + clipping.Y, 
+                clipping.Height, clipping.Width);
+        }
+
+        public static void GetCircles(this IplImage image, int blur, double dp, int minRadius, int maxRadius,
+            out CvMat circles)
+        {
+            circles = Cv.CreateMat(200, 1, MatrixType.F32C3);
+            var gray = new IplImage(image.Size, BitDepth.U8, 1);
+
+            image.CvtColor(gray, ColorConversion.BgrToGray);
+            gray.Smooth(gray, SmoothType.Median, blur);
+
+            Cv.HoughCircles(gray, circles, HoughCirclesMethod.Gradient, dp, int.MaxValue, 100, 100, minRadius, maxRadius);
+
+            gray.Dispose();
+        }
+
+        public static int IndexOfMaxValue(this int[] array)
+        {
+            return array.ToList().IndexOf(array.Max());
+        }
+
+        public static int GetClosestColor(this int[] plateColors, int n)
+        {
+            var minDiff = int.MaxValue;
+            var minIndex = -1;
+            for (var i = 0; i < plateColors.Count(); i++)
+            {
+                var diff = Math.Min(Math.Abs(plateColors[i] - n), Math.Abs(plateColors[i] + 180 - n));
+                if (diff >= minDiff) continue;
+                minIndex = i;
+                minDiff = diff;
+            }
+            return minIndex;
+        }
+
+        public static CvColor ConvertHsvToRgb(double hue, double saturation, double value)
+        {
+            var hi = Convert.ToInt32(Math.Floor(hue/60))%6;
+            var f = hue/60 - Math.Floor(hue/60);
+
+            value = value*255;
+            var v = Convert.ToInt32(value);
+            var p = Convert.ToInt32(value*(1 - saturation));
+            var q = Convert.ToInt32(value*(1 - f*saturation));
+            var t = Convert.ToInt32(value*(1 - (1 - f)*saturation));
+
+            switch (hi)
+            {
+                case 0:
+                    return new CvColor(v, t, p);
+                case 1:
+                    return new CvColor(q, v, p);
+                case 2:
+                    return new CvColor(p, v, t);
+                case 3:
+                    return new CvColor(p, q, v);
+                case 4:
+                    return new CvColor(t, p, v);
+                default:
+                    return new CvColor(v, p, q);
+            }
+        }
+    }
+
+    public class FixedSizedList<T>
+    {
+        private readonly List<T> _list = new List<T>();
+
+        public int Limit { get; set; }
+
+        public void Add(T obj)
+        {
+            _list.Add(obj);
+            while (_list.Count > Limit)
+                _list.RemoveAt(0);
+        }
+
+        public bool All(Func<T, bool> predicate)
+        {
+            return _list.All(predicate);
+        }
+    }
+}
+
+

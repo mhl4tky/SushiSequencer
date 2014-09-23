@@ -1,0 +1,7 @@
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\bin\Release\Avt.Mako.dll
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\bin\Release\Avt.Mako.pdb
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\bin\Release\VimbaNET.dll
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\bin\Release\VimbaNET.xml
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Release\Avt.Mako.csprojResolveAssemblyReference.cache
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Release\Avt.Mako.dll
+C:\Users\michael.hlatky\Documents\Visual Studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Release\Avt.Mako.pdb

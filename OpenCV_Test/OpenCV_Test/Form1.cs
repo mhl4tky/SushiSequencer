@@ -59,7 +59,7 @@ namespace OpenCV_Test
         {
             var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\sushi.avi");
 
-            while (CvWindow.WaitKey(20) < 0)
+            while (CvWindow.WaitKey(1) < 0)
             {
                 var src = cap.QueryFrame();
 
@@ -82,23 +82,23 @@ namespace OpenCV_Test
                         //convert to HSV
                         _masked.CvtColor(_hsv, ColorConversion.BgrToHsv);
                         _hsv.CvtColorHueToBgr(_h3, _mask);
-                        _hsv.CvtColorSaturationToBgr(_s3, _mask);
+                        //_hsv.CvtColorSaturationToBgr(_s3, _mask);
 
                         //compute the histogram
                         var histogramHueData = _hsv.Histogram(0, 180, _mask);
-                        var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
+                        //var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
 
-                        var rData = _masked.Histogram(0, 256, _mask);
-                        var gData = _masked.Histogram(1, 256, _mask);
-                        var bData = _masked.Histogram(2, 256, _mask);
+                        //var rData = _masked.Histogram(0, 256, _mask);
+                        //var gData = _masked.Histogram(1, 256, _mask);
+                        //var bData = _masked.Histogram(2, 256, _mask);
 
-                        var maxRgb = Math.Max(rData.Max(), Math.Max(gData.Max(), bData.Max()));
+                        //var maxRgb = Math.Max(rData.Max(), Math.Max(gData.Max(), bData.Max()));
 
                         _histogramHue.SetHistrogramData(histogramHueData);
-                        _histogramSat.SetHistrogramData(histogramSaturationData, CvColor.White);
-                        _histogramR.SetHistrogramData(rData, CvColor.Red, maxRgb);
-                        _histogramG.SetHistrogramData(gData, CvColor.Green, maxRgb);
-                        _histogramB.SetHistrogramData(bData, CvColor.Blue, maxRgb);
+                        //_histogramSat.SetHistrogramData(histogramSaturationData, CvColor.White);
+                        //_histogramR.SetHistrogramData(rData, CvColor.Red, maxRgb);
+                        //_histogramG.SetHistrogramData(gData, CvColor.Green, maxRgb);
+                        //_histogramB.SetHistrogramData(bData, CvColor.Blue, maxRgb);
 
                         //get the closest match from the histogram peak index
                         var color = PlateColorIndeces.GetClosestColor(histogramHueData.IndexOfMaxValue());
@@ -111,8 +111,8 @@ namespace OpenCV_Test
 
                     src.DrawCircle((int)_circles[0].Val0 + _clipping.X, (int)_circles[0].Val1 + _clipping.Y, MinRadius, _currColor, 2);
                     src.DrawCircle((int)_circles[0].Val0 + _clipping.X, (int)_circles[0].Val1 + _clipping.Y, MaxRadius, _currColor, 2);
-                    _detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MinRadius, _currColor, 2);
-                    _detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MaxRadius, _currColor, 2);
+                    //_detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MinRadius, _currColor, 2);
+                    //_detector.DrawCircle((int)_circles[0].Val0, (int)_circles[0].Val1, MaxRadius, _currColor, 2);
                 }
                 else
                     _previousYValues.Add(int.MaxValue);
@@ -120,16 +120,16 @@ namespace OpenCV_Test
                 src.DrawRect(_clipping, CvColor.Red, 2);
                 src.PutText("dp: " + _dp, new CvPoint(10, 16), _textFont, CvColor.White);
                 src.PutText("blur: " + _blur, new CvPoint(10, 36), _textFont, CvColor.White);
-                src.DrawImage(src.Width - _detector.Width, src.Height - _detector.Height - 200 - 20, _detector.Width, _detector.Height, _detector);
+                //src.DrawImage(src.Width - _detector.Width, src.Height - _detector.Height - 200 - 20, _detector.Width, _detector.Height, _detector);
                 src.DrawImage(src.Width - 200, src.Height - 200, 200, 200, _masked);
                 src.DrawImage(src.Width - 200 - _histogramHue.Width - 20, src.Height - _histogramHue.Height, _histogramHue.Width, _histogramHue.Height, _histogramHue);
-                src.DrawImage(src.Width - 200 - _histogramSat.Width - 20, src.Height - 2 * _histogramSat.Height - 20, _histogramSat.Width, _histogramSat.Height, _histogramSat);
+                //src.DrawImage(src.Width - 200 - _histogramSat.Width - 20, src.Height - 2 * _histogramSat.Height - 20, _histogramSat.Width, _histogramSat.Height, _histogramSat);
                 src.DrawImage(src.Width - 200 - _histogramHue.Width - _h3.Width - 40, src.Height - _h3.Height, _h3.Width, _h3.Height, _h3);
-                src.DrawImage(src.Width - 200 - _histogramSat.Width - _h3.Width - 40, src.Height - 2 * _h3.Height - 20, _h3.Width, _h3.Height, _s3);
+                //src.DrawImage(src.Width - 200 - _histogramSat.Width - _h3.Width - 40, src.Height - 2 * _h3.Height - 20, _h3.Width, _h3.Height, _s3);
 
-                src.DrawImage(0, src.Height - 3 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramR);
-                src.DrawImage(0, src.Height - 2 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramG);
-                src.DrawImage(0, src.Height - 1 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramB);
+                //src.DrawImage(0, src.Height - 3 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramR);
+                //src.DrawImage(0, src.Height - 2 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramG);
+                //src.DrawImage(0, src.Height - 1 * _histogramR.Height, _histogramR.Width, _histogramR.Height, _histogramB);
                 
                 _window.Image = src;
             }
