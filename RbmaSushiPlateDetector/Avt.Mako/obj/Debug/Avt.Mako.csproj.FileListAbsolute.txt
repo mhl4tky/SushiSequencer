@@ -62,3 +62,10 @@ c:\users\michael.hlatky\documents\visual studio 2013\Projects\RbmaSushiPlateDete
 c:\users\michael.hlatky\documents\visual studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.csprojResolveAssemblyReference.cache
 c:\users\michael.hlatky\documents\visual studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.dll
 c:\users\michael.hlatky\documents\visual studio 2013\Projects\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\bin\Debug\Avt.Mako.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\bin\Debug\Avt.Mako.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\bin\Debug\VimbaNET.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\bin\Debug\VimbaNET.xml
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.csprojResolveAssemblyReference.cache
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\Avt.Mako\obj\Debug\Avt.Mako.pdb

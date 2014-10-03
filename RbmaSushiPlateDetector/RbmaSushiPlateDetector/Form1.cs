@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Ni.Libraries.Midi;
 using OpenCvSharp;
 using Avt.Mako;
 
@@ -20,9 +21,17 @@ namespace RbmaSushiPlateDetector
 
             Instance = this;
 
+            var midiEngine = new MidiEngine();
+            midiEngine.InstantiateOutputDevice("1. Internal MIDI");
+
             var detector = new Detector();
-            detector.Detected += (sender, args) => 
-                Console.WriteLine(args.Color + " " + args.X.ToString("000") + " " + args.Y.ToString("000") + " " + args.Frame);
+            detector.Detected += (sender, args) =>
+            {
+                Console.WriteLine(args.Color + @" " + args.X.ToString("000") + @" " + args.Y.ToString("000") + @" " +
+                                  args.Frame);
+                midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte) args.Color, 127, ChannelCommand.NoteOn, 0));
+            };
+               
            
             SetUi();
             SetEventHandlers();
@@ -30,8 +39,8 @@ namespace RbmaSushiPlateDetector
             Shown += (sender, args) =>
             {
                 _window = new CvWindow("OpenCV AVT Mako");
-                Cam();
-                //Test();
+                //Cam();
+                Test();
             };
         }
 

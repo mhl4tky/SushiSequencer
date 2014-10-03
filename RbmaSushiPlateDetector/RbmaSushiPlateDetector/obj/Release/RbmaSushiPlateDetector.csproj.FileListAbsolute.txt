@@ -130,3 +130,15 @@ C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\R
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\obj\Release\RbmaSushiPlateDetector.Form1.resources
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\obj\Release\RbmaSushiPlateDetector.Properties.Resources.resources
 C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\obj\Release\RbmaSushiPlateDetector.csproj.GenerateResource.Cache
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Ni.Libraries.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Ni.Libraries.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Collections.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Collections.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.Midi.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.Midi.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.Timers.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Multimedia.Timers.pdb
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Threading.dll
+C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Release\NI\Sanford.Threading.pdb
