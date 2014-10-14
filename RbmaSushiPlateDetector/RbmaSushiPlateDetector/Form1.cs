@@ -1,51 +1,49 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Ni.Libraries.Midi;
 using OpenCvSharp;
 using Avt.Mako;
+using Timer = System.Windows.Forms.Timer;
 
 namespace RbmaSushiPlateDetector
 {
     public partial class Form1 : Form
     {
         private Camera _camera;
-        private CvWindow _window;
+        internal CvWindow _window;
         public static Form1 Instance { get; private set; }
         internal Setting Setting;
         private static IplImage _image = new IplImage(new CvSize(1292, 964), BitDepth.U8, 3);
-        private static IplImage _downsampled = new IplImage(323, 241, BitDepth.U8, 3);
+        private static IplImage _downsampled;
+        private static MidiEngine midiEngine;
+        private static bool started = false;
 
         public Form1()
         {
             InitializeComponent();
 
+            midiEngine = new MidiEngine();
+            midiEngine.InstantiateOutputDevice("1. Internal MIDI");
+            
+
             Instance = this;
 
-            var midiEngine = new MidiEngine();
-            midiEngine.InstantiateOutputDevice("1. Internal MIDI");
-
-            var detector = new Detector();
-            detector.Detected += (sender, args) =>
-            {
-                Console.WriteLine(args.Color + @" " + args.X.ToString("000") + @" " + args.Y.ToString("000") + @" " +
-                                  args.Frame);
-                midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte) args.Color, 127, ChannelCommand.NoteOn, 0));
-            };
-               
-           
             SetUi();
             SetEventHandlers();
+        }
 
-            Shown += (sender, args) =>
-            {
-                _window = new CvWindow("OpenCV AVT Mako");
-                //Cam();
-                Test();
-            };
+        private static void Setup()
+        {
+            var training = new Training();
+            Training.Train();
+            Training.Validate();
         }
 
         private static void Cam()
         {
+            _downsampled = new IplImage(323, 241, BitDepth.U8, 3);
             Instance._camera = new Camera();
             Instance._camera.NewFrame += (s, a) =>
             {
@@ -60,8 +58,13 @@ namespace RbmaSushiPlateDetector
 
         private static void Test()
         {
-            var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Documents\Sequences\Camera 1\23-22-46.543.avi");
+            
 
+            var detector = new Detector();
+            detector.Detected += DetectorOnDetected;
+
+            var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Desktop\Dwm 2014-10-12 08-44-29-64.mp4");
+            _downsampled = new IplImage(480, 270, BitDepth.U8, 3);
             var t = new Timer { Interval = 30 };
             t.Start();
             t.Tick += (sender, args) =>
@@ -76,6 +79,31 @@ namespace RbmaSushiPlateDetector
                 Instance._window.Image = _downsampled;
                 Instance.label1.Invoke((MethodInvoker) (() => Instance.label1.Text = @"Frame: " + cap.PosFrames));
             };
+        }
+
+        static int lastIndex = -1;
+        private static ulong frame = 0;
+
+        private static void DetectorOnDetected(object sender, DetectedEventArgs args)
+        {
+            if (args.Distance < 700 && args.Color != lastIndex && args.Frame > frame + 60 && args.Color != 4)
+            {
+                lastIndex = args.Color;
+                frame = args.Frame;
+
+                Console.WriteLine(args.X.ToString("000") + @" " + args.Y.ToString("000") + @" " +
+                                  args.Frame.ToString("0000") + @" " + args.Distance.ToString("00000") + @" " + Helpers.Names[args.Color]);
+
+
+                if (!started)
+                {
+                    midiEngine.SendStart("1. Internal MIDI");
+                    started = true;
+                }
+                    
+
+                midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)args.Color, 127, ChannelCommand.NoteOn, 0));
+            }  
         }
 
         internal void SetUi()
@@ -102,9 +130,81 @@ namespace RbmaSushiPlateDetector
             trackBar6.ValueChanged += (sender, args) => Detector.Blur = (trackBar6.Value * 2) + 1;
             trackBar7.ValueChanged += (sender, args) => Detector.MinRadius = trackBar7.Value;
             trackBar8.ValueChanged += (sender, args) => Detector.MaxRadius = trackBar8.Value;
-
-            button1.Click += (sender, args) => Setting.SaveSetting();
-            button2.Click += (sender, args) => Setting.LoadSetting();
         }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            Detector._save = checkBox1.Checked;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)0, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)1, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)2, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)3, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            _window = new CvWindow("OpenCV AVT Mako");
+            //Cam();
+            Test();
+            //Setup();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)4, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)5, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)6, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)7, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)8, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)9, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)10, 127, ChannelCommand.NoteOn, 0));
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)11, 127, ChannelCommand.NoteOn, 0));
+        }
+
+       
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenCvSharp;
+using OpenCvSharp.CPlusPlus.Flann;
 
 namespace RbmaSushiPlateDetector
 {
@@ -62,7 +63,7 @@ namespace RbmaSushiPlateDetector
 
             for (var i = 0; i < data.Length; i++)
             {
-                image.DrawLine(i + 2, image.Height, i + 2, (int) (image.Height - (data[i]/max)*image.Height),
+                image.DrawLine(i, image.Height, i, (int) (image.Height - (data[i]/max)*image.Height),
                     color, 1);
             }
         }
@@ -73,14 +74,14 @@ namespace RbmaSushiPlateDetector
 
             for (var i = 0; i < data.Length; i++)
             {
-                image.DrawLine(i + 2, image.Height, i + 2, (int) (image.Height - (data[i]/max)*image.Height),
+                image.DrawLine(i, image.Height, i, (int) (image.Height - (data[i]/max)*image.Height),
                     color, 1);
             }
         }
 
-        public static CvRect GetClippingRect(this CvMat circles, CvRect clipping)
+        public static CvRect GetClippingRect(this CvScalar circle, CvRect clipping)
         {
-            return new CvRect((int) circles[0].Val0 - clipping.Height/2 + clipping.X, (int) circles[0].Val1 - clipping.Width/2 + clipping.Y, 
+            return new CvRect((int)circle.Val0 - clipping.Height / 2 + clipping.X, (int)circle.Val1 - clipping.Width / 2 + clipping.Y, 
                 clipping.Height, clipping.Width);
         }
 
@@ -93,7 +94,7 @@ namespace RbmaSushiPlateDetector
             image.CvtColor(gray, ColorConversion.BgrToGray);
             gray.Smooth(gray, SmoothType.Median, blur);
 
-            Cv.HoughCircles(gray, circles, HoughCirclesMethod.Gradient, dp, int.MaxValue, 100, 100, minRadius, maxRadius);
+            Cv.HoughCircles(gray, circles, HoughCirclesMethod.Gradient, dp, 100, 100, 100, minRadius, maxRadius);
 
             gray.Dispose();
         }
@@ -103,18 +104,36 @@ namespace RbmaSushiPlateDetector
             return array.ToList().IndexOf(array.Max());
         }
 
-        public static int GetClosestColor(this int[] plateColors, int n)
+        public static float[][] HistHues;
+        public static float[][] HistSats;
+        public static string[] Names;
+
+        public static void GetClosestColor(int[] histHue, int[] histSat, out int index, out float minDistance)
         {
-            var minDiff = int.MaxValue;
-            var minIndex = -1;
-            for (var i = 0; i < plateColors.Count(); i++)
+            index = -1;
+            minDistance = float.MaxValue;
+            for (var i = 0; i < HistHues.Length; i++)
             {
-                var diff = Math.Min(Math.Abs(plateColors[i] - n), Math.Abs(plateColors[i] + 180 - n));
-                if (diff >= minDiff) continue;
-                minIndex = i;
-                minDiff = diff;
+                var d = _distance(histHue, HistHues[i]);
+                d += _distance(histSat, HistSats[i]);
+                if (d < minDistance)
+                {
+                    minDistance = d;
+                    index = i;
+                }
             }
-            return minIndex;
+            //Console.WriteLine(Names[index] + " " + minDistance);
+        }
+
+        private static float _distance(int[] a, float[] b)
+        {
+            double distance = 0;
+            for (var i = 0; i < a.Length; i++)
+            {
+                distance += (a[i]-b[i]) * (a[i]-b[i]);
+            }
+            distance = Math.Sqrt(distance);
+            return (float) distance;
         }
 
         public static CvColor ConvertHsvToRgb(double hue, double saturation, double value)
