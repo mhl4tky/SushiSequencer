@@ -12,6 +12,8 @@ namespace RbmaSushiPlateDetector
         public double Y { get; set; }
         public ulong Frame { get; set; }
         public float Distance { get; set; }
+
+        public int H { get; set; }
     }
 
     public class Detector
@@ -49,7 +51,7 @@ namespace RbmaSushiPlateDetector
 
         private static CvPoint p1 = new CvPoint(10, 16);
         private static CvPoint p2 = new CvPoint(10, 36);
-        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 80);
+        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 90);
 
         public static bool Save = false;
         private static int _n = 0;
@@ -139,7 +141,8 @@ namespace RbmaSushiPlateDetector
                         X = circle.Val0,
                         Y = circle.Val1,
                         Frame = frame,
-                        Distance =  distance
+                        Distance =  distance,
+                        H = histogramHueData.IndexOfMaxValue()
                     });
 
                     background.DrawRect(p3._offset(0, 10), p3._offset(400, -70), CvColor.Black, -1);
@@ -177,8 +180,6 @@ namespace RbmaSushiPlateDetector
 
             background.DrawImage(
                 new CvRect(original.Width + 20, downsampled.Height + _histogramHue.Height + 30, _histogramSaturation.Width, _histogramSaturation.Height), _histogramSaturation);
-
-            
         }
     }
 }

@@ -18,8 +18,12 @@ namespace RbmaSushiPlateDetector
         private static IplImage _image = new IplImage(new CvSize(1292, 964), BitDepth.U8, 3);
         private static IplImage _downsampled;
         private static IplImage _background = new IplImage(new CvSize(1625 + 20, 964 + 20), BitDepth.U8, 3);
+
+        private static Maschine _maschine = new Maschine();
         
         private static MidiEngine _midiEngine;
+
+        private string _midiOut = "1. Internal MIDI";
 
         public Form1()
         {
@@ -29,7 +33,21 @@ namespace RbmaSushiPlateDetector
             detector.Detected += DetectorOnDetected;
 
             _midiEngine = new MidiEngine();
-            _midiEngine.InstantiateOutputDevice("1. Internal MIDI");
+            var ins = _midiEngine.GetInputDeviceNames();
+            _midiEngine.InstantiateOutputDevice(_midiOut);
+            _midiEngine.InstantiateInputDevice("Maschine MK2 In");
+
+            _midiEngine.MidiMessageReceived += (sender, args) =>
+            {
+                if (args.MidiMessage.Device == "Maschine MK2 In")
+                {
+                    args.MidiMessage.Device = _midiOut;
+                    _midiEngine.Send(args.MidiMessage);
+                }
+            };
+
+            _maschine = new Maschine();
+            _maschine.SetColor(0);
 
             Instance = this;
 
@@ -102,7 +120,9 @@ namespace RbmaSushiPlateDetector
             Console.WriteLine(args.X.ToString("000") + @" " + args.Y.ToString("000") + @" " +
                               args.Frame.ToString("0000") + @" " + args.Distance.ToString("00000") + @" " + Helpers.Names[args.Color]);    
 
-            _midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)args.Color, 127, ChannelCommand.NoteOn, 0));
+            _maschine.SetColor(args.H * 2);
+
+            _midiEngine.Send(new MidiMessage(Instance._midiOut, (byte)args.Color, 127, ChannelCommand.NoteOn, 0));
         }
 
         internal static void CreateButtons()
@@ -121,7 +141,7 @@ namespace RbmaSushiPlateDetector
                 button.Click += (sender, args) =>
                 {
                     var bb = (byte) (sender as Control).Tag;
-                    var m = new MidiMessage("1. Internal MIDI", bb , 127, ChannelCommand.NoteOn, 0);
+                    var m = new MidiMessage(Instance._midiOut, bb, 127, ChannelCommand.NoteOn, 0);
                     _midiEngine.Send(m);
                 };
                 Instance.Controls.Add(button);
