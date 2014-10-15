@@ -87,7 +87,7 @@ namespace RbmaSushiPlateDetector
                     var histogramHueData = _hsv.Histogram(0, 180, _mask);
                     //Console.WriteLine(histogramHueData.Sum());
                     _hist.SetHistrogramData(histogramHueData);
-                    Form1.Instance._window.Image = _hist;
+                    Form1.Instance.Window.Image = _hist;
 
                     var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
                     
@@ -105,7 +105,7 @@ namespace RbmaSushiPlateDetector
                     histsSat[d][i] /= files.Length;
 
                 _hist.SetHistrogramData(histsHue[d].Select(x => (int)x).ToArray());
-                Form1.Instance._window.Image = _hist;
+                Form1.Instance.Window.Image = _hist;
                 Console.WriteLine(histsHue[d].Sum());
 
                 d++;
@@ -139,7 +139,7 @@ namespace RbmaSushiPlateDetector
                     var histogramHueData = _hsv.Histogram(0, 180, _mask);
                     var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
 
-                    Form1.Instance._window.Image = _image;
+                    Form1.Instance.Window.Image = _image;
 
                     
                     var n = 0;
