@@ -174,8 +174,6 @@ namespace RbmaSushiPlateDetector
 
             background.DrawImage(
                 new CvRect(original.Width + 20, downsampled.Height + _histogramHue.Height + 30, _histogramSaturation.Width, _histogramSaturation.Height), _histogramSaturation);
-
-            
         }
     }
 }
