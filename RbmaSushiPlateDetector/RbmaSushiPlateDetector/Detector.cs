@@ -115,7 +115,7 @@ namespace RbmaSushiPlateDetector
                     _masked.CvtColor(_hsv, ColorConversion.BgrToHsv);
                         
                     if (Save)
-                        _masked.SaveImage("images/" + (_n++).ToString("0000") + ".png");
+                        _masked.SaveImage(@"C:\Users\Michael\Desktop\images\" + (_n++).ToString("0000") + ".png");
 
 
                     _hsv.CvtColorHueToBgr(_h3, _mask);
