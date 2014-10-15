@@ -44,8 +44,8 @@ namespace RbmaSushiPlateDetector
 
             using (Stream stream = File.Open(openFileDialog.FileName, FileMode.Open))
             {
-                var bin = new XmlSerializer(typeof (Data));
-                var data = (Data) bin.Deserialize(stream);
+                var bin = new XmlSerializer(typeof(Data));
+                var data = (Data)bin.Deserialize(stream);
                 return data;
             }
         }
@@ -72,25 +72,30 @@ namespace RbmaSushiPlateDetector
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
-            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Debug\images");
+            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\Michael\Desktop\images");
             var histsHue = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 180);
             var histsSat = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 256);
 
+            Console.WriteLine("Training files");
+
             var d = 0;
-            foreach (var files in dirs.Select(dir => System.IO.Directory.GetFiles(dir)))
+            foreach (var dir in dirs)
             {
+                Console.WriteLine("\tProcessing " + dir);
+
+                var files = System.IO.Directory.GetFiles(dir);
+
                 foreach (var file in files)
                 {
                     _image = new IplImage(file);
 
                     _image.CvtColor(_hsv, ColorConversion.BgrToHsv);
                     var histogramHueData = _hsv.Histogram(0, 180, _mask);
-                    //Console.WriteLine(histogramHueData.Sum());
                     _hist.SetHistrogramData(histogramHueData);
                     Form1.Instance.Window.Image = _hist;
 
                     var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
-                    
+
                     for (var i = 0; i < histogramHueData.Length; i++)
                         histsHue[d][i] += histogramHueData[i];
 
@@ -106,10 +111,11 @@ namespace RbmaSushiPlateDetector
 
                 _hist.SetHistrogramData(histsHue[d].Select(x => (int)x).ToArray());
                 Form1.Instance.Window.Image = _hist;
-                Console.WriteLine(histsHue[d].Sum());
 
                 d++;
             }
+
+            Console.WriteLine("Training done");
 
             Data dd = new Data();
             dd.Names = dirs.Select(dir => new DirectoryInfo(dir).Name).ToArray();
@@ -120,7 +126,7 @@ namespace RbmaSushiPlateDetector
 
         public static void Validate()
         {
-            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\michael.hlatky\Documents\GitHub\SushiSequencer\RbmaSushiPlateDetector\RbmaSushiPlateDetector\bin\Debug\images");
+            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\Michael\Desktop\images");
             var _mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _hsv = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _mask.Set(CvColor.Black);
@@ -128,6 +134,8 @@ namespace RbmaSushiPlateDetector
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
             Detector._loadData();
+
+            Console.WriteLine("Validating files");
 
             foreach (var files in dirs.Select(dir => System.IO.Directory.GetFiles(dir)))
             {
@@ -141,17 +149,17 @@ namespace RbmaSushiPlateDetector
 
                     Form1.Instance.Window.Image = _image;
 
-                    
+
                     var n = 0;
                     var m = 0.0f;
                     Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out n, out m);
 
-                    if (Path.GetFileName( Path.GetDirectoryName( file ) ) !=  Helpers.Names[n])
-                        Console.WriteLine( Path.GetFileName( Path.GetDirectoryName( file ) + " " + m.ToString("00000") + " " + Helpers.Names[n]));
-
-                   
+                    if (Path.GetFileName(Path.GetDirectoryName(file)) != Helpers.Names[n])
+                        Console.WriteLine("\t" + Path.GetFileName(Path.GetDirectoryName(file) + " " + m.ToString("00000") + " " + Helpers.Names[n]));
                 }
             }
+
+            Console.WriteLine("Validation done");
         }
     }
 }
