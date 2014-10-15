@@ -79,6 +79,19 @@ namespace RbmaSushiPlateDetector
             }
         }
 
+        public static void SetHistrogramDataWithSaturation(this IplImage image, int[] data, int[] huedata)
+        {
+            double h = (double)huedata.IndexOfMaxValue() * 2;
+
+            image.Set(CvColor.Black);
+            var max = (float)data.Max();
+
+            for (var i = 0; i < data.Length; i++)
+            {
+                image.DrawLine(i, image.Height, i, (int)(image.Height - (data[i] / max) * image.Height), ConvertHsvToRgb(h, (double)i / data.Length, 1), 1);
+            }
+        }
+
         public static CvRect GetClippingRect(this CvScalar circle, CvRect clipping)
         {
             return new CvRect((int)circle.Val0 - clipping.Height / 2 + clipping.X, (int)circle.Val1 - clipping.Width / 2 + clipping.Y, 
@@ -123,6 +136,11 @@ namespace RbmaSushiPlateDetector
                 }
             }
             //Console.WriteLine(Names[index] + " " + minDistance);
+        }
+
+        public static CvPoint _offset(this CvPoint p, int x, int y)
+        {
+            return new CvPoint(p.X + x, p.Y + y);
         }
 
         private static float _distance(int[] a, float[] b)

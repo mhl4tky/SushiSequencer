@@ -17,6 +17,7 @@ namespace RbmaSushiPlateDetector
         internal Setting Setting;
         private static IplImage _image = new IplImage(new CvSize(1292, 964), BitDepth.U8, 3);
         private static IplImage _downsampled;
+        private static IplImage _background = new IplImage(new CvSize(1625 + 20, 964 + 20), BitDepth.U8, 3);
         private static MidiEngine midiEngine;
         private static bool started = false;
 
@@ -26,12 +27,19 @@ namespace RbmaSushiPlateDetector
 
             midiEngine = new MidiEngine();
             midiEngine.InstantiateOutputDevice("1. Internal MIDI");
-            
 
             Instance = this;
 
             SetUi();
             SetEventHandlers();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            _window = new CvWindow("OpenCV AVT Mako");
+            Cam(); 
+            //Test();
+            //Setup();
         }
 
         private static void Setup()
@@ -43,6 +51,9 @@ namespace RbmaSushiPlateDetector
 
         private static void Cam()
         {
+            var detector = new Detector();
+            detector.Detected += DetectorOnDetected;
+
             _downsampled = new IplImage(323, 241, BitDepth.U8, 3);
             Instance._camera = new Camera();
             Instance._camera.NewFrame += (s, a) =>
@@ -50,21 +61,19 @@ namespace RbmaSushiPlateDetector
                 _image.CopyPixelData(a.Buffer);
 
                 Cv.Resize(_image, _downsampled);
-                Detector.NewFrame(_downsampled, a.Count);
-                Instance._window.Image = _downsampled;
+                Detector.NewFrame(_background, _image, _downsampled, a.Count);
+                Instance._window.Image = _background;
                 Instance.label1.Invoke((MethodInvoker)(() => Instance.label1.Text = @"Frame: " + a.Count));
             };
         }
 
         private static void Test()
         {
-            
-
             var detector = new Detector();
             detector.Detected += DetectorOnDetected;
 
-            var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Desktop\Dwm 2014-10-12 08-44-29-64.mp4");
-            _downsampled = new IplImage(480, 270, BitDepth.U8, 3);
+            var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Desktop\test.mp4");
+            _downsampled = new IplImage(323, 241, BitDepth.U8, 3);
             var t = new Timer { Interval = 30 };
             t.Start();
             t.Tick += (sender, args) =>
@@ -75,8 +84,8 @@ namespace RbmaSushiPlateDetector
                     cap.PosFrames = 0;
 
                 Cv.Resize(_image, _downsampled);
-                Detector.NewFrame(_downsampled, (ulong)cap.PosFrames);
-                Instance._window.Image = _downsampled;
+                Detector.NewFrame(_background, _image, _downsampled, (ulong)cap.PosFrames);
+                Instance._window.Image = _background;
                 Instance.label1.Invoke((MethodInvoker) (() => Instance.label1.Text = @"Frame: " + cap.PosFrames));
             };
         }
@@ -134,7 +143,7 @@ namespace RbmaSushiPlateDetector
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            Detector._save = checkBox1.Checked;
+            Detector.Save = checkBox1.Checked;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -157,13 +166,7 @@ namespace RbmaSushiPlateDetector
             midiEngine.Send(new MidiMessage("1. Internal MIDI", (byte)3, 127, ChannelCommand.NoteOn, 0));
         }
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-            _window = new CvWindow("OpenCV AVT Mako");
-            //Cam();
-            Test();
-            //Setup();
-        }
+       
 
         private void button6_Click(object sender, EventArgs e)
         {

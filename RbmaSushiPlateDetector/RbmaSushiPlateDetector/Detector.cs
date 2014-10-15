@@ -40,17 +40,18 @@ namespace RbmaSushiPlateDetector
         private static IplImage _histogramHue = new IplImage(new CvSize(180, 200), BitDepth.U8, 3);
         private static IplImage _histogramSaturation = new IplImage(new CvSize(256, 200), BitDepth.U8, 3);
         private static IplImage _aroundDetectedCircle = new IplImage(150, 150, BitDepth.U8, 3);
-        private static CvWindow _debug1 = new CvWindow();
-        private static CvWindow _debug2 = new CvWindow();
-        private static CvWindow _debug3 = new CvWindow();
-        private static CvWindow _debug4 = new CvWindow();
-        private static CvWindow _debug5 = new CvWindow();
+        //private static CvWindow _debug1 = new CvWindow();
+        //private static CvWindow _debug2 = new CvWindow();
+        //private static CvWindow _debug3 = new CvWindow();
+        //private static CvWindow _debug4 = new CvWindow();
+        //private static CvWindow _debug5 = new CvWindow();
 
         private static CvPoint p1 = new CvPoint(10, 16);
         private static CvPoint p2 = new CvPoint(10, 36);
-        private static CvPoint p3 = new CvPoint(10, 184);
+        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 50);
 
-        public static bool _save = false;
+        public static bool Save = false;
+        private static int _n = 0;
 
         public event EventHandler<DetectedEventArgs> Detected;
 
@@ -85,14 +86,14 @@ namespace RbmaSushiPlateDetector
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, MinRadius - 5, CvColor.Black, -1);
         }
 
-        private static int n = 0;
+        
 
-        public static void NewFrame(IplImage src, ulong frame)
+        public static void NewFrame(IplImage background, IplImage original, IplImage downsampled, ulong frame)
         {
-            if (src == null) return;
+            if (downsampled == null) return;
 
             //cut out a small piece from the original, let the circle detection run
-            src.GetSubImage(Clipping).GetCircles(Blur, Dp, MinRadius, MaxRadius, out _circles);
+            downsampled.GetSubImage(Clipping).GetCircles(Blur, Dp, MinRadius, MaxRadius, out _circles);
 
             if (_circles.Any())
             {
@@ -100,70 +101,81 @@ namespace RbmaSushiPlateDetector
                 {
                     //get the image from the original so that the circle is centered
                     var rect = circle.GetClippingRect(Clipping);
-                    _aroundDetectedCircle = src.GetSubImage(rect);
+                    _aroundDetectedCircle = downsampled.GetSubImage(rect);
 
                     //check whether we got a full image
-                    //if (_aroundDetectedCircle.Width == _mask.Width && _aroundDetectedCircle.Height == _mask.Height)
-                    {
-                        //mask the image with the circular mask
-                        _aroundDetectedCircle.And(_mask, _masked);
+                    if (_aroundDetectedCircle.Width != _mask.Width || _aroundDetectedCircle.Height != _mask.Height)
+                        continue;
 
-                        //convert to HSV
-                        _masked.CvtColor(_hsv, ColorConversion.BgrToHsv);
+                    //mask the image with the circular mask
+                    _aroundDetectedCircle.And(_mask, _masked);
+
+                    //convert to HSV
+                    _masked.CvtColor(_hsv, ColorConversion.BgrToHsv);
                         
-                        if (_save)
-                            _masked.SaveImage("images/" + (n++).ToString("0000") + ".png");
+                    if (Save)
+                        _masked.SaveImage("images/" + (_n++).ToString("0000") + ".png");
 
 
-                        _hsv.CvtColorHueToBgr(_h3, _mask);
-                        _hsv.CvtColorSaturationToBgr(_s3, _mask);
+                    _hsv.CvtColorHueToBgr(_h3, _mask);
+                    _hsv.CvtColorSaturationToBgr(_s3, _mask);
 
-                        //compute the histogram
-                        var histogramHueData = _hsv.Histogram(0, 180, _mask);
-                        _histogramHue.SetHistrogramData(histogramHueData);
+                    //compute the histogram
+                    var histogramHueData = _hsv.Histogram(0, 180, _mask);
+                    _histogramHue.SetHistrogramData(histogramHueData);
 
-                        var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
-                        _histogramSaturation.SetHistrogramData(histogramSaturationData, CvColor.White);
+                    var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
+                    _histogramSaturation.SetHistrogramDataWithSaturation(histogramSaturationData, histogramHueData);
 
-                        //get the closest match from the histogram peak index
-                        var color = -1;
-                        var distance = 0.0f;
-                        Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out color, out distance);
+                    //get the closest match from the histogram peak index
+                    var color = -1;
+                    var distance = 0.0f;
+                    Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out color, out distance);
 
-                       // _currColor = PlateColors[color];
+                    Instance.Detected.SafeInvoke(Instance, new DetectedEventArgs
+                    {
+                        Color = color,
+                        X = circle.Val0,
+                        Y = circle.Val1,
+                        Frame = frame,
+                        Distance =  distance
+                    });
 
-                        Instance.Detected.SafeInvoke(Instance, new DetectedEventArgs
-                        {
-                            Color = color,
-                            X = circle.Val0,
-                            Y = circle.Val1,
-                            Frame = frame,
-                            Distance =  distance
-                        });
-
-                        _masked.PutText(Helpers.Names[color], p3, _textFont, CvColor.White);
-
-                    }
-
+                    background.DrawRect(p3._offset(0, 10), p3._offset(100, -20), CvColor.Black, -1);
+                    background.PutText(Helpers.Names[color], p3, _textFont, CvColor.White);
                     
                 }
                 foreach (var circle in _circles)
                 {
-                    src.DrawCircle((int)circle.Val0 + Clipping.X, (int)circle.Val1 + Clipping.Y, MinRadius, _currColor, 2);
-                    src.DrawCircle((int)circle.Val0 + Clipping.X, (int)circle.Val1 + Clipping.Y, MaxRadius, _currColor, 2);
+                    downsampled.DrawCircle((int)circle.Val0 + Clipping.X, (int)circle.Val1 + Clipping.Y, MinRadius, _currColor, 2);
+                    downsampled.DrawCircle((int)circle.Val0 + Clipping.X, (int)circle.Val1 + Clipping.Y, MaxRadius, _currColor, 2);
                 }
                
             }
 
-            src.DrawRect(Clipping, CvColor.Black, 2);
-            src.PutText("Dp: " + Dp, p1, _textFont, CvColor.White);
-            src.PutText("Blur: " + Blur, p2, _textFont, CvColor.White);
+            downsampled.DrawRect(Clipping, CvColor.Black, 2);
+            downsampled.PutText("Dp: " + Dp, p1, _textFont, CvColor.White);
+            downsampled.PutText("Blur: " + Blur, p2, _textFont, CvColor.White);
 
-            _debug1.Image = _masked;
-            _debug2.Image = _histogramHue;
-            _debug3.Image = _h3;
-            _debug4.Image = _s3;
-            _debug5.Image = _histogramSaturation;
+            background.DrawImage(new CvRect(10,10, original.Width, original.Height), original);
+            background.DrawImage(new CvRect(original.Width + 20, 10, downsampled.Width, downsampled.Height), downsampled);
+
+            background.DrawImage(
+                new CvRect(background.Width - 450 - 10, background.Height - _masked.Height - 10, _masked.Width, _masked.Height), _masked);
+
+            background.DrawImage(
+                new CvRect(background.Width - 450 + _masked.Width - 10, background.Height - _masked.Height - 10, _h3.Width, _h3.Height), _h3);
+
+            background.DrawImage(
+                new CvRect(background.Width - 450 + _masked.Width + _h3.Width - 10, background.Height - _masked.Height - 10, _s3.Width, _s3.Height), _s3);
+
+            background.DrawImage(
+                new CvRect(original.Width + 20, downsampled.Height + 20, _histogramHue.Width, _histogramHue.Height), _histogramHue);
+
+            background.DrawImage(
+                new CvRect(original.Width + 20, downsampled.Height + _histogramHue.Height + 30, _histogramSaturation.Width, _histogramSaturation.Height), _histogramSaturation);
+
+            
         }
     }
 }
