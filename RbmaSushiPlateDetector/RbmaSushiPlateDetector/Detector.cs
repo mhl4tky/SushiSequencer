@@ -32,6 +32,7 @@ namespace RbmaSushiPlateDetector
         private static CvMat _circles;
         private static CvColor _currColor = CvColor.White;
         private static CvFont _textFont = new CvFont(FontFace.HersheyPlain, 1f, 1f);
+        private static CvFont _textFont2 = new CvFont(FontFace.HersheyTriplex, 2f, 2f, 0, 2);
         private static IplImage _masked = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
         private static IplImage _mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
         private static IplImage _hsv = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
@@ -48,7 +49,7 @@ namespace RbmaSushiPlateDetector
 
         private static CvPoint p1 = new CvPoint(10, 16);
         private static CvPoint p2 = new CvPoint(10, 36);
-        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 50);
+        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 80);
 
         public static bool Save = false;
         private static int _n = 0;
@@ -141,8 +142,10 @@ namespace RbmaSushiPlateDetector
                         Distance =  distance
                     });
 
-                    background.DrawRect(p3._offset(0, 10), p3._offset(100, -20), CvColor.Black, -1);
-                    background.PutText(Helpers.Names[color], p3, _textFont, CvColor.White);
+                    background.DrawRect(p3._offset(0, 10), p3._offset(400, -70), CvColor.Black, -1);
+
+                    if (Helpers.Names[color] != "false")
+                        background.PutText(Helpers.Names[color].ToUpper(), p3, _textFont2, CvColor.White);
                     
                 }
                 foreach (var circle in _circles)
@@ -174,6 +177,8 @@ namespace RbmaSushiPlateDetector
 
             background.DrawImage(
                 new CvRect(original.Width + 20, downsampled.Height + _histogramHue.Height + 30, _histogramSaturation.Width, _histogramSaturation.Height), _histogramSaturation);
+
+            
         }
     }
 }
