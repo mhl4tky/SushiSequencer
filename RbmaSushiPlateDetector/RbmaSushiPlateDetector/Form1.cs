@@ -102,7 +102,7 @@ namespace RbmaSushiPlateDetector
 
         private static void Test()
         {
-            var cap = CvCapture.FromFile(@"C:\Users\michael.hlatky\Desktop\test.mp4");
+            var cap = CvCapture.FromFile(@"test.mp4");
             _downsampled = new IplImage(323, 241, BitDepth.U8, 3);
             var t = new Timer { Interval = 30 };
             t.Start();

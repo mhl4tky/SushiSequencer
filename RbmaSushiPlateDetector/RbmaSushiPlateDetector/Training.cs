@@ -126,7 +126,7 @@ namespace RbmaSushiPlateDetector
 
         public static void Validate()
         {
-            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\Michael\Desktop\images");
+            var dirs = System.IO.Directory.GetDirectories(@"images");
             var _mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _hsv = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _mask.Set(CvColor.Black);
