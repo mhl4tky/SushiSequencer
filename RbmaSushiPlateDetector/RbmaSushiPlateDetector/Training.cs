@@ -27,7 +27,7 @@ namespace RbmaSushiPlateDetector
 
             var serializer = new XmlSerializer(typeof(Data));
             var xmlPath = Path.ChangeExtension(saveFileDialog.FileName, ".data");
-            TextWriter textWriter = new StreamWriter(xmlPath);
+            var textWriter = new StreamWriter(xmlPath);
             serializer.Serialize(textWriter, data);
             textWriter.Flush();
             textWriter.Close();
@@ -42,7 +42,7 @@ namespace RbmaSushiPlateDetector
             };
             openFileDialog.ShowDialog();
 
-            using (Stream stream = File.Open(openFileDialog.FileName, FileMode.Open))
+            using (var stream = File.Open(openFileDialog.FileName, FileMode.Open))
             {
                 var bin = new XmlSerializer(typeof(Data));
                 var data = (Data)bin.Deserialize(stream);
@@ -116,13 +116,13 @@ namespace RbmaSushiPlateDetector
 
             Console.WriteLine(@"Training done");
 
-            var dd = new Data
+            var data = new Data
             {
                 Names = dirs.Select(dir => new DirectoryInfo(dir).Name).ToArray(),
                 Hues = histsHue,
                 Sats = histsSat
             };
-            Data.Save(dd);
+            Data.Save(data);
         }
 
         public static void Validate()
@@ -148,12 +148,10 @@ namespace RbmaSushiPlateDetector
 
                 Form1.Instance.Window.Image = _image;
 
-                int n;
-                float m;
-                Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out n, out m);
+                var result = Helpers.GetClosestColor(histogramHueData, histogramSaturationData);
 
-                if (Path.GetFileName(Path.GetDirectoryName(file)) != Helpers.Names[n])
-                    Console.WriteLine(@"\t" + Path.GetFileName(Path.GetDirectoryName(file) + " " + m.ToString("00000") + " " + Helpers.Names[n]));
+                if (Path.GetFileName(Path.GetDirectoryName(file)) != Helpers.Names[result.Item1])
+                    Console.WriteLine(@"\t" + Path.GetFileName(Path.GetDirectoryName(file) + " " + result.Item2.ToString("00000") + " " + Helpers.Names[result.Item1]));
             }
 
             Console.WriteLine(@"Validation done");

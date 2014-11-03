@@ -7,6 +7,10 @@ namespace RbmaSushiPlateDetector
 {
     public static class Helpers
     {
+        public static float[][] HistHues;
+        public static float[][] HistSats;
+        public static string[] Names;
+
         public static void CvtColorHueToBgr(this IplImage src, IplImage dest, IplImage mask)
         {
             for (var i = 0; i < src.Width; i++)
@@ -36,7 +40,6 @@ namespace RbmaSushiPlateDetector
                     if (mask[i, j][0] != 0)
                     {
                         var index = (int) Math.Round(image[i, j][channel]);
-                        //if (index > size - 1) index = size - 1;
                         hist[index]++;
                     }
 
@@ -80,15 +83,14 @@ namespace RbmaSushiPlateDetector
 
         public static void SetHistrogramDataWithSaturation(this IplImage image, int[] data, int[] huedata)
         {
-            double h = (double)huedata.IndexOfMaxValue() * 2;
+            var h = (double)huedata.IndexOfMaxValue() * 2;
 
             image.Set(CvColor.Black);
             var max = (float)data.Max();
 
             for (var i = 0; i < data.Length; i++)
-            {
-                image.DrawLine(i, image.Height, i, (int)(image.Height - (data[i] / max) * image.Height), ConvertHsvToRgb(h, (double)i / data.Length, 1), 1);
-            }
+                image.DrawLine(i, image.Height, i, (int)(image.Height - (data[i] / max) * image.Height), 
+                    ConvertHsvToRgb(h, (double)i / data.Length, 1), 1);
         }
 
         public static CvRect GetClippingRect(this CvScalar circle, CvRect clipping)
@@ -116,39 +118,33 @@ namespace RbmaSushiPlateDetector
             return array.ToList().IndexOf(array.Max());
         }
 
-        public static float[][] HistHues;
-        public static float[][] HistSats;
-        public static string[] Names;
-
-        public static void GetClosestColor(int[] histHue, int[] histSat, out int index, out float minDistance)
+        public static Tuple<int, float> GetClosestColor(int[] histHue, int[] histSat)
         {
-            index = -1;
-            minDistance = float.MaxValue;
+            var index = -1;
+            var minDistance = float.MaxValue;
             for (var i = 0; i < HistHues.Length; i++)
             {
-                var d = _distance(histHue, HistHues[i]);
-                d += _distance(histSat, HistSats[i]);
-                if (d < minDistance)
-                {
-                    minDistance = d;
-                    index = i;
-                }
+                var d = Distance(histHue, HistHues[i]);
+                d += Distance(histSat, HistSats[i]);
+                if (!(d < minDistance)) continue;
+                
+                minDistance = d;
+                index = i;
             }
-            //Console.WriteLine(Names[index] + " " + minDistance);
+           return new Tuple<int, float>(index, minDistance);
         }
 
-        public static CvPoint _offset(this CvPoint p, int x, int y)
+        public static CvPoint Offset(this CvPoint p, int x, int y)
         {
             return new CvPoint(p.X + x, p.Y + y);
         }
 
-        private static float _distance(int[] a, float[] b)
+        private static float Distance(IList<int> a, IList<float> b)
         {
             double distance = 0;
-            for (var i = 0; i < a.Length; i++)
-            {
+            for (var i = 0; i < a.Count; i++)
                 distance += (a[i]-b[i]) * (a[i]-b[i]);
-            }
+
             distance = Math.Sqrt(distance);
             return (float) distance;
         }
@@ -166,18 +162,12 @@ namespace RbmaSushiPlateDetector
 
             switch (hi)
             {
-                case 0:
-                    return new CvColor(v, t, p);
-                case 1:
-                    return new CvColor(q, v, p);
-                case 2:
-                    return new CvColor(p, v, t);
-                case 3:
-                    return new CvColor(p, q, v);
-                case 4:
-                    return new CvColor(t, p, v);
-                default:
-                    return new CvColor(v, p, q);
+                case 0: return new CvColor(v, t, p);
+                case 1: return new CvColor(q, v, p);
+                case 2: return new CvColor(p, v, t);
+                case 3: return new CvColor(p, q, v);
+                case 4: return new CvColor(t, p, v);
+                default: return new CvColor(v, p, q);
             }
         }
 
@@ -188,7 +178,6 @@ namespace RbmaSushiPlateDetector
             for (var i = 0; i < x; i++)
             {
                 array[i] = new T[y];
-
                 for (var j = 0; j < y; j++)
                     array[i][j] = new T();
             }

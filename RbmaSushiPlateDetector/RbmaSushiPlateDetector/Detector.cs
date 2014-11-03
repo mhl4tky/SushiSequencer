@@ -58,11 +58,8 @@ namespace RbmaSushiPlateDetector
         public Detector()
         {
             Instance = this;
-
             _initMask();
-
             _loadData();
-
         }
 
         internal static void _loadData()
@@ -114,7 +111,7 @@ namespace RbmaSushiPlateDetector
                     if (Save)
                         _masked.SaveImage("images/" + (_n++).ToString("0000") + ".png");
 
-
+                    //convert to debug images
                     _hsv.CvtColorHueToBgr(_h3, _mask);
                     _hsv.CvtColorSaturationToBgr(_s3, _mask);
 
@@ -126,9 +123,8 @@ namespace RbmaSushiPlateDetector
                     _histogramSaturation.SetHistrogramDataWithSaturation(histogramSaturationData, histogramHueData);
 
                     //get the closest match from the histogram peak index
-                    int color;
-                    float distance;
-                    Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out color, out distance);
+                    var result = Helpers.GetClosestColor(histogramHueData, histogramSaturationData);
+                    var color = result.Item1;
 
                     Instance.Detected.SafeInvoke(Instance, new DetectedEventArgs
                     {
@@ -136,7 +132,7 @@ namespace RbmaSushiPlateDetector
                         X = circle.Val0,
                         Y = circle.Val1,
                         Frame = frame,
-                        Distance =  distance,
+                        Distance =  result.Item2,
                         H = histogramHueData.IndexOfMaxValue()
                     });
 

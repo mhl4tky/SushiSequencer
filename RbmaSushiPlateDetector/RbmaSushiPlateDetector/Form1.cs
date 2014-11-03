@@ -25,6 +25,8 @@ namespace RbmaSushiPlateDetector
         //private static MidiEngine _midiEngine;
 
         private string _midiOut = "1. Internal MIDI";
+        static int _lastIndex = -1;
+        private static ulong _frame;
 
         //public static void SendMidi(MidiMessage m)
         //{
@@ -92,7 +94,6 @@ namespace RbmaSushiPlateDetector
             Instance._camera.NewFrame += (s, a) =>
             {
                 _image.CopyPixelData(a.Buffer);
-
                 Cv.Resize(_image, _downsampled);
                 Detector.NewFrame(_background, _image, _downsampled, a.Count);
                 Instance.Window.Image = _background;
@@ -120,11 +121,11 @@ namespace RbmaSushiPlateDetector
             };
         }
 
-        static int _lastIndex = -1;
-        private static ulong _frame;
+
 
         private static void DetectorOnDetected(object sender, DetectedEventArgs args)
         {
+            //change these settings to fit the plate distance and belt speed
             if (args.Distance > 700 || args.Color == _lastIndex || args.Frame <= _frame + 60 || args.Color == 4)
                 return;
 
@@ -145,17 +146,19 @@ namespace RbmaSushiPlateDetector
             byte x = 0;
             foreach (var b in Helpers.Names)
             {
-                var button = new Button();
-                button.Name = "button_" + b;
-                button.Text = b;
-                button.Location = new Point(Instance.trackBar1.Width + 110, y);
+                var button = new Button
+                {
+                    Name = "button_" + b,
+                    Text = b,
+                    Location = new Point(Instance.trackBar1.Width + 110, y)
+                };
                 y += 30;
                 button.Show();
                 button.Tag = x++;
                 button.Click += (sender, args) =>
                 {
-                    var bb = (byte) (sender as Control).Tag;
-                    //var m = new MidiMessage(Instance._midiOut, bb, 127, ChannelCommand.NoteOn, 0);
+                    //var msg = (byte) (sender as Control).Tag;
+                    //var m = new MidiMessage(Instance._midiOut, msg, 127, ChannelCommand.NoteOn, 0);
                     //SendMidi(m);
                 };
                 Instance.Controls.Add(button);
