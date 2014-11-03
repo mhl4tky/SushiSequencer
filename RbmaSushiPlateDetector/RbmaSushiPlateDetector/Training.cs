@@ -57,7 +57,6 @@ namespace RbmaSushiPlateDetector
 
         private static IplImage _image, _hsv, _hist;
 
-        private static IplImage _downsampled = new IplImage(480, 270, BitDepth.U8, 3);
         public Training()
         {
             Instance = this;
@@ -65,36 +64,36 @@ namespace RbmaSushiPlateDetector
 
         public static void Train()
         {
-            var _mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
+            var mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _hsv = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _hist = new IplImage(new CvSize(180, 200), BitDepth.U8, 3);
-            _mask.Set(CvColor.Black);
-            _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
-            _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
+            mask.Set(CvColor.Black);
+            mask.Circle(mask.Width / 2, mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
+            mask.Circle(mask.Width / 2, mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
             var dirs = Directory.GetDirectories(@"images");
             var histsHue = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 180);
             var histsSat = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 256);
 
-            Console.WriteLine("Training files");
+            Console.WriteLine(@"Training files");
 
             var d = 0;
             foreach (var dir in dirs)
             {
-                Console.WriteLine("\tProcessing " + dir);
+                Console.WriteLine(@"\tProcessing " + dir);
 
-                var files = System.IO.Directory.GetFiles(dir);
+                var files = Directory.GetFiles(dir);
 
                 foreach (var file in files)
                 {
                     _image = new IplImage(file);
 
                     _image.CvtColor(_hsv, ColorConversion.BgrToHsv);
-                    var histogramHueData = _hsv.Histogram(0, 180, _mask);
+                    var histogramHueData = _hsv.Histogram(0, 180, mask);
                     _hist.SetHistrogramData(histogramHueData);
                     Form1.Instance.Window.Image = _hist;
 
-                    var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
+                    var histogramSaturationData = _hsv.Histogram(1, 256, mask);
 
                     for (var i = 0; i < histogramHueData.Length; i++)
                         histsHue[d][i] += histogramHueData[i];
@@ -115,51 +114,49 @@ namespace RbmaSushiPlateDetector
                 d++;
             }
 
-            Console.WriteLine("Training done");
+            Console.WriteLine(@"Training done");
 
-            Data dd = new Data();
-            dd.Names = dirs.Select(dir => new DirectoryInfo(dir).Name).ToArray();
-            dd.Hues = histsHue;
-            dd.Sats = histsSat;
+            var dd = new Data
+            {
+                Names = dirs.Select(dir => new DirectoryInfo(dir).Name).ToArray(),
+                Hues = histsHue,
+                Sats = histsSat
+            };
             Data.Save(dd);
         }
 
         public static void Validate()
         {
-            var dirs = System.IO.Directory.GetDirectories(@"images");
-            var _mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
+            var dirs = Directory.GetDirectories(@"images");
+            var mask = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
             _hsv = new IplImage(new CvSize(150, 150), BitDepth.U8, 3);
-            _mask.Set(CvColor.Black);
-            _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
-            _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
+            mask.Set(CvColor.Black);
+            mask.Circle(mask.Width / 2, mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
+            mask.Circle(mask.Width / 2, mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
             Detector._loadData();
 
-            Console.WriteLine("Validating files");
+            Console.WriteLine(@"Validating files");
 
-            foreach (var files in dirs.Select(dir => System.IO.Directory.GetFiles(dir)))
+            foreach (var file in dirs.Select(Directory.GetFiles).SelectMany(files => files))
             {
-                foreach (var file in files)
-                {
-                    _image = new IplImage(file);
+                _image = new IplImage(file);
 
-                    _image.CvtColor(_hsv, ColorConversion.BgrToHsv);
-                    var histogramHueData = _hsv.Histogram(0, 180, _mask);
-                    var histogramSaturationData = _hsv.Histogram(1, 256, _mask);
+                _image.CvtColor(_hsv, ColorConversion.BgrToHsv);
+                var histogramHueData = _hsv.Histogram(0, 180, mask);
+                var histogramSaturationData = _hsv.Histogram(1, 256, mask);
 
-                    Form1.Instance.Window.Image = _image;
+                Form1.Instance.Window.Image = _image;
 
+                int n;
+                float m;
+                Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out n, out m);
 
-                    var n = 0;
-                    var m = 0.0f;
-                    Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out n, out m);
-
-                    if (Path.GetFileName(Path.GetDirectoryName(file)) != Helpers.Names[n])
-                        Console.WriteLine("\t" + Path.GetFileName(Path.GetDirectoryName(file) + " " + m.ToString("00000") + " " + Helpers.Names[n]));
-                }
+                if (Path.GetFileName(Path.GetDirectoryName(file)) != Helpers.Names[n])
+                    Console.WriteLine(@"\t" + Path.GetFileName(Path.GetDirectoryName(file) + " " + m.ToString("00000") + " " + Helpers.Names[n]));
             }
 
-            Console.WriteLine("Validation done");
+            Console.WriteLine(@"Validation done");
         }
     }
 }

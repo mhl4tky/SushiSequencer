@@ -43,18 +43,13 @@ namespace RbmaSushiPlateDetector
         private static IplImage _histogramHue = new IplImage(new CvSize(180, 200), BitDepth.U8, 3);
         private static IplImage _histogramSaturation = new IplImage(new CvSize(256, 200), BitDepth.U8, 3);
         private static IplImage _aroundDetectedCircle = new IplImage(150, 150, BitDepth.U8, 3);
-        //private static CvWindow _debug1 = new CvWindow();
-        //private static CvWindow _debug2 = new CvWindow();
-        //private static CvWindow _debug3 = new CvWindow();
-        //private static CvWindow _debug4 = new CvWindow();
-        //private static CvWindow _debug5 = new CvWindow();
 
         private static CvPoint p1 = new CvPoint(10, 16);
         private static CvPoint p2 = new CvPoint(10, 36);
-        private static CvPoint p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 90);
+        private static CvPoint _p3 = new CvPoint(1292 + 20, 241 + 200 + 200 + 90);
 
         public static bool Save = false;
-        private static int _n = 0;
+        private static int _n;
 
         public event EventHandler<DetectedEventArgs> Detected;
 
@@ -131,8 +126,8 @@ namespace RbmaSushiPlateDetector
                     _histogramSaturation.SetHistrogramDataWithSaturation(histogramSaturationData, histogramHueData);
 
                     //get the closest match from the histogram peak index
-                    var color = -1;
-                    var distance = 0.0f;
+                    int color;
+                    float distance;
                     Helpers.GetClosestColor(histogramHueData, histogramSaturationData, out color, out distance);
 
                     Instance.Detected.SafeInvoke(Instance, new DetectedEventArgs
@@ -145,10 +140,10 @@ namespace RbmaSushiPlateDetector
                         H = histogramHueData.IndexOfMaxValue()
                     });
 
-                    background.DrawRect(p3._offset(0, 10), p3._offset(400, -70), CvColor.Black, -1);
+                    background.DrawRect(_p3._offset(0, 10), _p3._offset(400, -70), CvColor.Black, -1);
 
                     if (Helpers.Names[color] != "false")
-                        background.PutText(Helpers.Names[color].ToUpper(), p3, _textFont2, CvColor.White);
+                        background.PutText(Helpers.Names[color].ToUpper(), _p3, _textFont2, CvColor.White);
                     
                 }
                 foreach (var circle in _circles)
