@@ -72,7 +72,7 @@ namespace RbmaSushiPlateDetector
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MaxRadius - 5, CvColor.White, -1);
             _mask.Circle(_mask.Width / 2, _mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
-            var dirs = System.IO.Directory.GetDirectories(@"C:\Users\Michael\Desktop\images");
+            var dirs = Directory.GetDirectories(@"images");
             var histsHue = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 180);
             var histsSat = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 256);
 

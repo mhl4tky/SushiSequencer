@@ -23,14 +23,14 @@ namespace RbmaSushiPlateDetector
             Red, Yellow, Turquoise, Purple
         }
 
-        private static int _minRadius = 30;
-        private static int _maxRadius = 48;
+        private static int _minRadius = 31;
+        private static int _maxRadius = 41;
 
         public static int MinRadius { get { return _minRadius; } set { _minRadius = value; Console.WriteLine(_minRadius); _initMask(); } }
         public static int MaxRadius { get { return _maxRadius; } set { _maxRadius = value; Console.WriteLine(_maxRadius); _initMask(); } }
-        public static double Dp = 1.8d;
+        public static double Dp = 2.2d;
         public static int Blur = 1;
-        public static CvRect Clipping = new CvRect(75, 25, 150, 150);
+        public static CvRect Clipping = new CvRect(40, 50, 150, 150);
         private static CvMat _circles;
         private static CvColor _currColor = CvColor.White;
         private static CvFont _textFont = new CvFont(FontFace.HersheyPlain, 1f, 1f);

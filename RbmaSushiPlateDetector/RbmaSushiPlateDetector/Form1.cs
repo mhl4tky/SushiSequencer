@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
-using Ni.Libraries.Midi;
+//using Ni.Libraries.Midi;
 using OpenCvSharp;
 using Avt.Mako;
 using Timer = System.Windows.Forms.Timer;
@@ -21,9 +22,22 @@ namespace RbmaSushiPlateDetector
 
         private static Maschine _maschine = new Maschine();
         
-        private static MidiEngine _midiEngine;
+        //private static MidiEngine _midiEngine;
 
         private string _midiOut = "1. Internal MIDI";
+
+        //public static void SendMidi(MidiMessage m)
+        //{
+        //    ThreadPool.QueueUserWorkItem(AsyncSendMidi, m);
+        //}
+
+        //private static void AsyncSendMidi(object o)
+        //{
+        //    var m = o as MidiMessage;
+        //    if (m == null) return;
+
+        //    _midiEngine.Send(m);
+        //}
 
         public Form1()
         {
@@ -32,19 +46,19 @@ namespace RbmaSushiPlateDetector
             var detector = new Detector();
             detector.Detected += DetectorOnDetected;
 
-            _midiEngine = new MidiEngine();
-            var ins = _midiEngine.GetInputDeviceNames();
-            _midiEngine.InstantiateOutputDevice(_midiOut);
-            _midiEngine.InstantiateInputDevice("Maschine MK2 In");
+            //_midiEngine = new MidiEngine();
+            //_midiEngine.InstantiateOutputDevice(_midiOut);
+            //_midiEngine.InstantiateInputDevice("Maschine MK2 In");
 
-            _midiEngine.MidiMessageReceived += (sender, args) =>
-            {
-                if (args.MidiMessage.Device == "Maschine MK2 In")
-                {
-                    args.MidiMessage.Device = _midiOut;
-                    _midiEngine.Send(args.MidiMessage);
-                }
-            };
+            //_midiEngine.MidiMessageReceived += (sender, args) =>
+            //{
+            //    if (args.MidiMessage.Device == "Maschine MK2 In")
+            //    {
+            //        args.MidiMessage.Device = _midiOut;
+            //        //_maschine.SetColor(args.MidiMessage.Data2 * 2);
+            //        SendMidi(args.MidiMessage);
+            //    }
+            //};
 
             _maschine = new Maschine();
             _maschine.SetColor(0);
@@ -59,8 +73,8 @@ namespace RbmaSushiPlateDetector
         private void buttonRun_Click(object sender, EventArgs e)
         {
             Window = new CvWindow("OpenCV AVT Mako");
-            //Cam(); 
-            Test();
+            Cam(); 
+            //Test();
             //Setup();
         }
 
@@ -68,7 +82,7 @@ namespace RbmaSushiPlateDetector
         {
             new Training();
             Training.Train();
-            Training.Validate();
+            //Training.Validate();
         }
 
         private static void Cam()
@@ -122,7 +136,7 @@ namespace RbmaSushiPlateDetector
 
             _maschine.SetColor(args.H * 2);
 
-            _midiEngine.Send(new MidiMessage(Instance._midiOut, (byte)args.Color, 127, ChannelCommand.NoteOn, 0));
+            //SendMidi(new MidiMessage(Instance._midiOut, (byte)args.Color, 127, ChannelCommand.NoteOn, 0));
         }
 
         internal static void CreateButtons()
@@ -141,8 +155,8 @@ namespace RbmaSushiPlateDetector
                 button.Click += (sender, args) =>
                 {
                     var bb = (byte) (sender as Control).Tag;
-                    var m = new MidiMessage(Instance._midiOut, bb, 127, ChannelCommand.NoteOn, 0);
-                    _midiEngine.Send(m);
+                    //var m = new MidiMessage(Instance._midiOut, bb, 127, ChannelCommand.NoteOn, 0);
+                    //SendMidi(m);
                 };
                 Instance.Controls.Add(button);
             }
@@ -164,10 +178,10 @@ namespace RbmaSushiPlateDetector
         {
             Closing += (sender, args) => _camera.Dispose();
 
-            trackBar1.ValueChanged += (sender, args) => Detector.Clipping.X = trackBar1.Value;
-            trackBar2.ValueChanged += (sender, args) => Detector.Clipping.Width = trackBar2.Value;
-            trackBar3.ValueChanged += (sender, args) => Detector.Clipping.Y = trackBar3.Value;
-            trackBar4.ValueChanged += (sender, args) => Detector.Clipping.Height = trackBar4.Value;
+            trackBar1.ValueChanged += (sender, args) => { Detector.Clipping.X = trackBar1.Value; Console.WriteLine(trackBar1.Value); };
+            trackBar2.ValueChanged += (sender, args) => { Detector.Clipping.Width = trackBar2.Value; Console.WriteLine(trackBar2.Value); };
+            trackBar3.ValueChanged += (sender, args) => { Detector.Clipping.Y = trackBar3.Value; Console.WriteLine(trackBar3.Value); };
+            trackBar4.ValueChanged += (sender, args) => { Detector.Clipping.Height = trackBar4.Value; Console.WriteLine(trackBar4.Value); };
             trackBar5.ValueChanged += (sender, args) => Detector.Dp = trackBar5.Value / 10d;
             trackBar6.ValueChanged += (sender, args) => Detector.Blur = (trackBar6.Value * 2) + 1;
             trackBar7.ValueChanged += (sender, args) => Detector.MinRadius = trackBar7.Value;
