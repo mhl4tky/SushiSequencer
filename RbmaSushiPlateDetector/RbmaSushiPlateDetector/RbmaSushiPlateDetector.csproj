@@ -72,10 +72,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ni.Libraries, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>NI\Ni.Libraries.dll</HintPath>
-    </Reference>
     <Reference Include="OpenCvSharp">
       <HintPath>..\packages\OpenCvSharp-AnyCPU.2.4.9.20140901\lib\net40\OpenCvSharp.dll</HintPath>
     </Reference>
