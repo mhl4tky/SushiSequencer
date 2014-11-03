@@ -180,26 +180,22 @@ namespace RbmaSushiPlateDetector
                     return new CvColor(v, p, q);
             }
         }
-    }
 
-    public class FixedSizedList<T>
-    {
-        private readonly List<T> _list = new List<T>();
-
-        public int Limit { get; set; }
-
-        public void Add(T obj)
+        public static T[][] New2DArray<T>(int x, int y)
+            where T : new()
         {
-            _list.Add(obj);
-            while (_list.Count > Limit)
-                _list.RemoveAt(0);
-        }
+            var array = new T[x][];
+            for (var i = 0; i < x; i++)
+            {
+                array[i] = new T[y];
 
-        public bool All(Func<T, bool> predicate)
-        {
-            return _list.All(predicate);
+                for (var j = 0; j < y; j++)
+                    array[i][j] = new T();
+            }
+            return array;
         }
     }
+
 }
 
 

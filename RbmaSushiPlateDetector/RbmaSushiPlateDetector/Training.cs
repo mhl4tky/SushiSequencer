@@ -72,8 +72,8 @@ namespace RbmaSushiPlateDetector
             mask.Circle(mask.Width / 2, mask.Width / 2, Detector.MinRadius - 5, CvColor.Black, -1);
 
             var dirs = Directory.GetDirectories(@"images");
-            var histsHue = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 180);
-            var histsSat = Ni.Libraries.Util.Objects.New2DArray<float>(dirs.Length, 256);
+            var histsHue = Helpers.New2DArray<float>(dirs.Length, 180);
+            var histsSat = Helpers.New2DArray<float>(dirs.Length, 256);
 
             Console.WriteLine(@"Training files");
 
